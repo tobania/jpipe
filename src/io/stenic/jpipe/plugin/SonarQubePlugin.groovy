@@ -8,6 +8,10 @@ class SonarQubePlugin extends Plugin {
     private String credentialsId;
     private String projectKey;
     private Boolean allowFailure;
+    private String dockerImage;
+    private String command;
+    private ArrayList<String> extraArguments;
+    private ArrayList<String> dockerArguments;
 
     SonarQubePlugin(Map opts = [:]) {
         this.credentialsId = opts.get('credentialId', 'sonarqube-token');
