@@ -13,6 +13,7 @@ class DockerPlugin extends Plugin {
     private String filePath;
     private String testScript;
     private List extraTargets;
+    private List extraTags;
     private Boolean useCache;
     private Boolean doCleanup;
 
