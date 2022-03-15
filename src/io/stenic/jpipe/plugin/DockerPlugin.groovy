@@ -8,6 +8,7 @@ class DockerPlugin extends Plugin {
     private String server;
     private String repository;
     private String buildArgs;
+    private String target;
     private Boolean push;
     private String filePath;
     private String testScript;
@@ -22,6 +23,7 @@ class DockerPlugin extends Plugin {
         this.buildArgs = opts.get('buildArgs', '');
         this.push = opts.get('push', this.credentialId != '');
         this.filePath = opts.get('filePath', '.');
+        this.target = opts.get('target', '');
         this.extraTargets = opts.get('extraTargets', []);
         this.testScript = opts.get('testScript', '');
         this.useCache = opts.get('useCache', true);
@@ -53,10 +55,15 @@ class DockerPlugin extends Plugin {
                     }
                 } catch(Exception e) {}
             }
+            
+            def buildArgs = this.buildArgs
+            if (this.target != '') {
+                buildArgs = "--target=${this.target} ${this.buildArgs}"
+            }
 
             event.script.docker.build(
                 "${this.repository}:${event.version}",
-                "${this.buildArgs} ${this.filePath}"
+                "${buildArgs} ${this.filePath}"
             )
             this.extraTargets.each { target ->
                 event.script.docker.build(
