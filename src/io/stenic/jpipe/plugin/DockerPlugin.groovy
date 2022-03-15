@@ -25,6 +25,7 @@ class DockerPlugin extends Plugin {
         this.filePath = opts.get('filePath', '.');
         this.target = opts.get('target', '');
         this.extraTargets = opts.get('extraTargets', []);
+        this.extraTags = opts.get('extraTags', []);
         this.testScript = opts.get('testScript', '');
         this.useCache = opts.get('useCache', true);
         this.doCleanup = opts.get('doCleanup', false);
@@ -65,6 +66,9 @@ class DockerPlugin extends Plugin {
                 "${this.repository}:${event.version}",
                 "${buildArgs} ${this.filePath}"
             )
+            this.extraTags.each { tag ->
+                event.sh "docker tag ${this.repository}:${event.version} ${this.repository}:${tag}"
+            }
             this.extraTargets.each { target ->
                 event.script.docker.build(
                     "${this.repository}:${target}",
@@ -86,6 +90,9 @@ class DockerPlugin extends Plugin {
         if (this.push) {
             event.script.docker.withRegistry(this.server, this.credentialId) {
                 event.script.docker.image("${this.repository}:${event.version}").push()
+                this.extraTags.each { tag ->
+                    event.script.docker.image("${this.repository}:${tag}").push()
+                }
                 if (this.useCache) {
                     try {
                         event.script.docker.image("${this.repository}:${event.version}").push('cache')
@@ -104,6 +111,9 @@ class DockerPlugin extends Plugin {
         }
         try {
             event.script.sh "docker rmi ${this.repository}:${event.version}"
+            this.extraTags.each { tag ->
+                event.script.sh "docker rmi ${this.repository}:${tag}"
+            }
             this.extraTargets.each { target ->
                 event.script.sh "docker rmi ${this.repository}:${target}"
             }
