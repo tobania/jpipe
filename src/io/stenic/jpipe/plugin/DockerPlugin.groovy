@@ -68,7 +68,7 @@ class DockerPlugin extends Plugin {
                 "${buildArgs} ${this.filePath}"
             )
             this.extraTags.each { tag ->
-                event.sh "docker tag ${this.repository}:${event.version} ${this.repository}:${tag}"
+                event.script.sh "docker tag ${this.repository}:${event.version} ${this.repository}:${tag}"
             }
             this.extraTargets.each { target ->
                 event.script.docker.build(
