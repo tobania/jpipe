@@ -9,7 +9,7 @@ class TriggerBuildPlugin extends Plugin {
     private Integer eventWeight;
     private Map params;
     private Boolean addVersionParam;
-    private Boolean showLogs;
+    private Boolean propagate;
     
     TriggerBuildPlugin(Map opts = [:]) {
         this.jobName = opts.get('jobName');
