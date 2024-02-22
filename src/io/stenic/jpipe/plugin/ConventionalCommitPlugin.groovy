@@ -82,6 +82,8 @@ class ConventionalCommitPlugin extends Plugin {
     private runRelease(script, cmdArgs) {
         Boolean configCreated = false
         String configFile = 'release.config.cjs'
+        String gitUrl = script.scm.getUserRemoteConfigs()[0].getUrl()
+
         if (!script.fileExists("./${configFile}")) {
             def releasercCfg = script.libraryResource "io/stenic/jpipe/release/${configFile}"
             script.writeFile file: configFile, text: releasercCfg
@@ -91,10 +93,19 @@ class ConventionalCommitPlugin extends Plugin {
         script.withEnv([
             "RELEASE_BRANCHES=${this.releaseBranches}",
             "PRERELEASE_BRANCHES=${this.prereleaseBranches}",
-            "GIT_URL=${script.scm.getUserRemoteConfigs()[0].getUrl()}",
+            "GIT_URL=${gitUrl}"
         ]) {
-            script.sshagent(credentials: [script.scm.getUserRemoteConfigs()[0].getCredentialsId()]) {
-                script.sh "semantic-release ${cmdArgs}"
+            if (gitUrl.startsWith("http")) {
+                withCredentials([usernamePassword(credentialsId: "semantic-release-credential", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    script.withEnv(["GIT_CREDENTIALS=${USERNAME}:${PASSWORD}"]) {
+                        script.sh "semantic-release ${cmdArgs}"
+                    }
+                }
+            } 
+            else {
+                script.sshagent(credentials: [script.scm.getUserRemoteConfigs()[0].getCredentialsId()]) {
+                    script.sh "semantic-release ${cmdArgs}"
+                }
             }
         }
 
