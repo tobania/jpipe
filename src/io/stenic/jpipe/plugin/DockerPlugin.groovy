@@ -68,7 +68,7 @@ class DockerPlugin extends Plugin {
             event.script.withEnv([
                 'DOCKER_BUILDKIT=1'
             ]) {
-                event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()]) {
+                event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
                     event.script.docker.build(
                         "${this.repository}:${event.version}",
                         "${buildArgs} --build-arg ${this.buildArgVersionKey}=${event.version} ${this.filePath}"

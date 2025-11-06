@@ -97,7 +97,7 @@ class ConventionalCommitPlugin extends Plugin {
         ]
 
         script.withEnv(env) {
-            script.sshagent(credentials: [script.scm.getUserRemoteConfigs()[0].getCredentialsId()]) {
+            script.sshagent(credentials: [script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
                 script.sh "semantic-release ${cmdArgs}"
             }
         }
