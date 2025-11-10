@@ -57,7 +57,7 @@ class DockerPlugin extends Plugin {
         event.script.docker.withRegistry(this.depServer, this.depCredentialId) {
              event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
                  def depRegistry = this.depServer - ~/https:\/\//
-                 event.script.sh "sed -r -n 's;.*FROM\s+(${this.depRegistry}/.*)\s+AS.*;\1;p' Dockerfile > .images_to_pull"
+                 event.script.sh "sed -r -n 's;.*FROM\\s+(${this.depRegistry}/.*)\\s+AS.*;\\1;p' Dockerfile > .images_to_pull"
                  def imagesToPull = script.readFile('.images_to_pull').trim().split( '\n' )
                  event.script.sh "rm -rf .images_to_pull"
                  imagesToPull.each { image ->
