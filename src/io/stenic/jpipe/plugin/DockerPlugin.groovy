@@ -4,6 +4,8 @@ import io.stenic.jpipe.event.Event
 
 class DockerPlugin extends Plugin {
 
+    private String buildCredentialId
+    private String buildServer
     private String credentialId
     private String server
     private String repository
@@ -22,6 +24,8 @@ class DockerPlugin extends Plugin {
         this.repository = opts.get('repository', '')
         this.credentialId = opts.get('credentialId', '')
         this.server = opts.get('server', 'http://index.docker.io')
+        this.buildCredentialId = opts.get('buildCredentialId', this.credentialId)
+        this.buildServer = opts.get('server', this.server) 
         this.buildArgs = opts.get('buildArgs', '')
         this.push = opts.get('push', this.credentialId != '')
         this.filePath = opts.get('filePath', '.')
@@ -50,7 +54,7 @@ class DockerPlugin extends Plugin {
     }
 
     public void doDockerBuild(Event event) {
-        event.script.docker.withRegistry(this.server, this.credentialId) {
+        event.script.docker.withRegistry(this.buildServer, this.credentialId) {
             if (this.useCache) {
                 try {
                     event.script.docker.image("${this.repository}:cache").pull()
