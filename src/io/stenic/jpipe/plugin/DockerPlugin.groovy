@@ -4,8 +4,8 @@ import io.stenic.jpipe.event.Event
 
 class DockerPlugin extends Plugin {
 
-    private String buildCredentialId
-    private String buildServer
+    private String depCredentialId
+    private String depServer
     private String credentialId
     private String server
     private String repository
@@ -24,8 +24,8 @@ class DockerPlugin extends Plugin {
         this.repository = opts.get('repository', '')
         this.credentialId = opts.get('credentialId', '')
         this.server = opts.get('server', 'http://index.docker.io')
-        this.buildCredentialId = opts.get('buildCredentialId', this.credentialId)
-        this.buildServer = opts.get('server', this.server) 
+        this.depCredentialId = opts.get('depCredentialId', this.credentialId)
+        this.depServer = opts.get('depServer', this.server) 
         this.buildArgs = opts.get('buildArgs', '')
         this.push = opts.get('push', this.credentialId != '')
         this.filePath = opts.get('filePath', '.')
@@ -53,8 +53,18 @@ class DockerPlugin extends Plugin {
         ]
     }
 
-    public void doDockerBuild(Event event) {
-        event.script.docker.withRegistry(this.buildServer, this.credentialId) {
+    public void doDockerBuild(Event event) { 
+        event.script.docker.withRegistry(this.depServer, this.depCredentialId) {
+             event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
+                 event.script.sh "sed -r -n 's;.*FROM\s+(${this.depServer}/.*)\s+AS.*;\1;p' Dockerfile > .images_to_pull"
+                 def imagesToPull = script.readFile('.images_to_pull').trim().split( '\n' )
+                 event.script.sh "rm -rf .images_to_pull"
+                 imagesToPull.each { image ->
+                     event.script.docker.image("${image}").pull()
+                 }
+             }
+        }
+        event.script.docker.withRegistry(this.server, this.credentialId) {
             if (this.useCache) {
                 try {
                     event.script.docker.image("${this.repository}:cache").pull()
