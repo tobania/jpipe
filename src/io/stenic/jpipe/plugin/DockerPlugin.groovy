@@ -57,9 +57,9 @@ class DockerPlugin extends Plugin {
         event.script.docker.withRegistry(this.depServer, this.depCredentialId) {
             event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
                 def depRegistry = this.depServer - ~/https:\/\//
-                def file = readFile('Dockerfile')
+                def file = script.readFile('Dockerfile').trim().split( '\n' )
                 def imagesToPull = []
-                file.eachLine { line ->
+                file.each { line ->
                     if (line =~ /$depRegistry/) {
                         def image = line =~ /FROM\s+($depRegistry\/.*)\s+AS.*/
                         imagesToPull << image[0][1]
