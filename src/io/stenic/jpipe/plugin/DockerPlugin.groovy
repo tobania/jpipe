@@ -55,15 +55,20 @@ class DockerPlugin extends Plugin {
 
     public void doDockerBuild(Event event) { 
         event.script.docker.withRegistry(this.depServer, this.depCredentialId) {
-             event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
-                 def depRegistry = this.depServer - ~/https:\/\//
-                 event.script.sh "sed -r -n 's;.*FROM\\s+(${depRegistry}/.*)\\s+AS.*;\\1;p' Dockerfile > .images_to_pull"
-                 def imagesToPull = script.readFile('.images_to_pull').trim().split( '\n' )
-                 event.script.sh "rm -rf .images_to_pull"
-                 imagesToPull.each { image ->
-                     event.script.docker.image("${image}").pull()
-                 }
-             }
+            event.script.sshagent(credentials: [event.script.scm.getUserRemoteConfigs()[0].getCredentialsId()], ignoreMissing: true) {
+                def depRegistry = this.depServer - ~/https:\/\//
+                def file = new File('Dockerfile')
+                def imagesToPull = []
+                file.eachLine { line ->
+                    if (line =~ /$depRegistry/) {
+                        def image = line =~ /FROM\s+($depRegistry\/.*)\s+AS.*/
+                        imagesToPull << image[0][1]
+                    }
+                }
+                imagesToPull.each { image ->
+                    event.script.docker.image("${image}").pull()
+                }
+            }
         }
         event.script.docker.withRegistry(this.server, this.credentialId) {
             if (this.useCache) {
